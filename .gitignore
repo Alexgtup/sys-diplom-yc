@@ -1,0 +1,14 @@
+.DS_Store
+
+# terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/crash.log
+
+# local vars and secrets
+terraform/terraform.tfvars
+**/*key*.json
+**/*.pem
+**/*.key
+
