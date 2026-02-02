@@ -1,0 +1,4 @@
+network_id = "enpc3qsud5u2021n8bo2"
+subnet_private_a_id = "e9bl55ubng6lph1h6tui"
+subnet_private_b_id = "e2l8rpjjrn63jark6usn"
+subnet_public_id = "e9bpqcop0foerkh6q0cu"

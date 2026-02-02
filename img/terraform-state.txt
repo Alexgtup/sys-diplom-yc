@@ -1,0 +1,6 @@
+yandex_vpc_gateway.nat
+yandex_vpc_network.main
+yandex_vpc_route_table.private
+yandex_vpc_subnet.private_a
+yandex_vpc_subnet.private_b
+yandex_vpc_subnet.public
