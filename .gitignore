@@ -12,3 +12,18 @@ terraform/terraform.tfvars
 **/*.pem
 **/*.key
 
+
+# terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+crash.log
+*.tfvars
+*.tfvars.json
+
+# keys
+terraform/keys/
+*.pem
+*.key
+id_rsa
+id_ed25519

@@ -21,18 +21,28 @@ resource "yandex_vpc_security_group" "alb" {
   network_id = yandex_vpc_network.main.id
 
   ingress {
-    protocol       = "TCP"
+    description       = "healthchecks for alb"
+    protocol          = "TCP"
+    port              = 30080
+    predefined_target = "loadbalancer_healthchecks"
+  }
+
+  ingress {
     description    = "http from internet"
-    v4_cidr_blocks = ["0.0.0.0/0"]
+    protocol       = "TCP"
     port           = 80
+    v4_cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    protocol       = "ANY"
     description    = "all egress"
+    protocol       = "ANY"
+    from_port      = -1
+    to_port        = -1
     v4_cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
 
 resource "yandex_vpc_security_group" "zabbix" {
   name       = "sys-diplom-sg-zabbix"

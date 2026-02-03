@@ -41,7 +41,6 @@ terraform - инфраструктура, ansible - настройка софт�
 
 ---
 
-
 ## 1 сеть и подсети
 
 создан vpc `sys-diplom` и 3 подсети
@@ -51,15 +50,10 @@ private-b (ru-central1-b)
 
 где смотреть: vpc - сети - sys-diplom
 
-<details>
-<summary>скриншот</summary>
 
 ![vpc subnets](img/01-vpc-subnets.png)
 
-`</details>`
-
-
-## 2 nat и маршрутизация private
+2 nat и маршрутизация private
 
 для private подсетей включен исходящий доступ в интернет через nat gateway
 создана route table с маршрутом `0.0.0.0/0` через nat и привязана к private-a и private-b
@@ -69,15 +63,11 @@ vpc - шлюзы - sys-diplom-nat
 vpc - таблицы маршрутизации - sys-diplom-private-rt
 vpc - подсети - sys-diplom-private-a / sys-diplom-private-b (поле таблица маршрутизации)
 
-<details>
-<summary>скрины</summary>
 
 ![nat gateway](img/02-nat-gateway.png)
 ![route table](img/03-route-table.png)
 ![private a rt](img/04-private-a-rt.png)
 ![private b rt](img/05-private-b-rt.png)
-
-</details>
 
 
 ## 4 security groups
@@ -85,8 +75,6 @@ vpc - подсети - sys-diplom-private-a / sys-diplom-private-b (поле т�
 sg разнесены по ролям: bastion, web, zabbix, elastic, kibana, alb
 наружу открыты только нужные порты, ssh к внутренним vm только через bastion
 
-<details>
-<summary>скрины</summary>
 
 ![sg list](img/06-sg-list.png)
 ![sg bastion](img/07-sg-bastion.png)
@@ -94,15 +82,10 @@ sg разнесены по ролям: bastion, web, zabbix, elastic, kibana, al
 ![sg elastic](img/09-sg-elastic.png)
 ![sg kibana](img/10-sg-kibana.png)
 
-</details>
 
 ## 5 bastion
 
 vm `bastion` в public подсети с публичным ip, вход только ssh
 
-<details>
-<summary>скрин</summary>
 
 ![bastion vm](img/11-bastion-vm.png)
-
-</details>
