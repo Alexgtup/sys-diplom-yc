@@ -1,0 +1,25 @@
+
+- name: Web nodes - nginx
+  hosts: web
+  become: true
+  tasks:
+    - name: Install nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: true
+
+    - name: Put index.html
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          <h1>{{ ansible_facts.fqdn | default(inventory_hostname) }}</h1><p>OK</p>
+
+    - name: Enable and start nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
