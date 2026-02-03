@@ -1,10 +1,10 @@
 .DS_Store
 
 # terraform
-terraform/.terraform/
-terraform/*.tfstate
-terraform/*.tfstate.*
-terraform/crash.log
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/terraform.tfvars
 
 # local vars and secrets
 terraform/terraform.tfvars
