@@ -1,4 +1,5 @@
 ## диплом netology - отказоустойчивая инфраструктура для сайта в yandex cloud
+
 terraform - инфраструктура, ansible - настройка софта на vm
 
 репозиторий: terraform/ (код) + img/ (скрины)
@@ -40,51 +41,68 @@ terraform - инфраструктура, ansible - настройка софт�
 
 ---
 
+
 ## 1 сеть и подсети
 
 создан vpc `sys-diplom` и 3 подсети
+public (ru-central1-a)
+private-a (ru-central1-a)
+private-b (ru-central1-b)
 
-- public (ru-central1-a)
-- private-a (ru-central1-a)
-- private-b (ru-central1-b)
+где смотреть: vpc - сети - sys-diplom
 
-где смотреть в консоли
-vpc -> сети -> sys-diplom
+<details>
+<summary>скриншот</summary>
 
 ![vpc subnets](img/01-vpc-subnets.png)
 
----
+`</details>`
+
 
 ## 2 nat и маршрутизация private
 
-для private подсетей настроен исходящий доступ в интернет через nat gateway
+для private подсетей включен исходящий доступ в интернет через nat gateway
 создана route table с маршрутом `0.0.0.0/0` через nat и привязана к private-a и private-b
 
-где смотреть в консоли
+где смотреть:
+vpc - шлюзы - sys-diplom-nat
+vpc - таблицы маршрутизации - sys-diplom-private-rt
+vpc - подсети - sys-diplom-private-a / sys-diplom-private-b (поле таблица маршрутизации)
 
-- vpc -> шлюзы -> sys-diplom-nat
-- vpc -> таблицы маршрутизации -> sys-diplom-private-rt
-- vpc -> подсети -> sys-diplom-private-a / sys-diplom-private-b (поле таблица маршрутизации)
+<details>
+<summary>скрины</summary>
 
 ![nat gateway](img/02-nat-gateway.png)
 ![route table](img/03-route-table.png)
 ![private a rt](img/04-private-a-rt.png)
 ![private b rt](img/05-private-b-rt.png)
 
----
+</details>
 
-## 3 terraform outputs
 
-команда
+## 4 security groups
 
-    cd terraform
-    terraform output
+sg разнесены по ролям: bastion, web, zabbix, elastic, kibana, alb
+наружу открыты только нужные порты, ssh к внутренним vm только через bastion
 
-вывод
+<details>
+<summary>скрины</summary>
 
-    network_id = "enpc3qsud5u2021n8bo2"
-    subnet_private_a_id = "e9bl55ubng6lph1h6tui"
-    subnet_private_b_id = "e2l8rpjjrn63jark6usn"
-    subnet_public_id = "e9bpqcop0foerkh6q0cu"
+![sg list](img/06-sg-list.png)
+![sg bastion](img/07-sg-bastion.png)
+![sg web](img/08-sg-web.png)
+![sg elastic](img/09-sg-elastic.png)
+![sg kibana](img/10-sg-kibana.png)
 
----
+</details>
+
+## 5 bastion
+
+vm `bastion` в public подсети с публичным ip, вход только ssh
+
+<details>
+<summary>скрин</summary>
+
+![bastion vm](img/11-bastion-vm.png)
+
+</details>

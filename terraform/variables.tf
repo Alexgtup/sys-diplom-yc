@@ -53,3 +53,13 @@ variable "private_cidr_b" {
   type    = string
   default = "10.10.3.0/24"
 }
+
+variable "vm_user" {
+  type    = string
+  default = "ubuntu"
+}
+
+variable "ssh_public_key_path" {
+  type        = string
+  description = "path to public ssh key, например ~/.ssh/id_rsa.pub"
+}
