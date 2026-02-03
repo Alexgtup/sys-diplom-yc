@@ -31,8 +31,8 @@ terraform - инфраструктура, ansible - настройка софт�
 
 - [X] сеть vpc + подсети
 - [X] nat gateway + route table для private подсетей
-- [ ] security groups
-- [ ] bastion vm
+- [X] security groups
+- [X] bastion vm
 - [ ] web vm x2 + alb
 - [ ] zabbix + agents
 - [ ] elastic + kibana + filebeat
