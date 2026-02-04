@@ -50,7 +50,6 @@ private-b (ru-central1-b)
 
 где смотреть: vpc - сети - sys-diplom
 
-
 ![vpc subnets](img/01-vpc-subnets.png)
 
 2 nat и маршрутизация private
@@ -63,18 +62,15 @@ vpc - шлюзы - sys-diplom-nat
 vpc - таблицы маршрутизации - sys-diplom-private-rt
 vpc - подсети - sys-diplom-private-a / sys-diplom-private-b (поле таблица маршрутизации)
 
-
 ![nat gateway](img/02-nat-gateway.png)
 ![route table](img/03-route-table.png)
 ![private a rt](img/04-private-a-rt.png)
 ![private b rt](img/05-private-b-rt.png)
 
-
 ## 4 security groups
 
 sg разнесены по ролям: bastion, web, zabbix, elastic, kibana, alb
 наружу открыты только нужные порты, ssh к внутренним vm только через bastion
-
 
 ![sg list](img/06-sg-list.png)
 ![sg bastion](img/07-sg-bastion.png)
@@ -82,10 +78,62 @@ sg разнесены по ролям: bastion, web, zabbix, elastic, kibana, al
 ![sg elastic](img/09-sg-elastic.png)
 ![sg kibana](img/10-sg-kibana.png)
 
-
 ## 5 bastion
 
 vm `bastion` в public подсети с публичным ip, вход только ssh
 
-
 ![bastion vm](img/11-bastion-vm.png)
+
+
+## 6 web vm x2 + alb
+
+внутри приватного контура подняты два одинаковых web-сервера в разных зонах, наружу сайт отдаётся только через application load balancer
+
+### 6.1 web vm (private)
+
+web vm:
+
+- `web-a` - `sys-diplom-private-a (ru-central1-a)`, `10.10.2.4`, `web-a.ru-central1.internal`
+- `web-b` - `sys-diplom-private-b (ru-central1-b)`, `10.10.3.5`, `web-b.ru-central1.internal`
+
+у web vm нет публичных ip, подключение по ssh только через bastion
+
+где смотреть: compute cloud - виртуальные машины
+
+![web vms](img/12-web-vms.png)
+
+внутренние fqdn (используются в ansible inventory, без привязки к ip)
+
+![web-a overview](img/12-web-a-overview.png)
+![web-b overview](img/12-web-b-overview.png)
+
+### 6.2 application load balancer (public)
+
+alb принимает http снаружи и балансирует трафик между `web-a` и `web-b`
+
+- public ip alb: `158.160.224.121`
+
+где смотреть: application load balancer - балансировщики
+
+![alb](img/13-alb.png)
+
+### 6.3 security groups (alb -> web)
+
+доступы сделаны так, чтобы до web нельзя было достучаться напрямую:
+
+- `sys-diplom-sg-alb` - открыт `80` наружу + `loadbalancer_healthchecks`
+- `sys-diplom-sg-web` - `80` только от `sys-diplom-sg-alb`, `22` только от `sys-diplom-sg-bastion`
+
+итог: сайт доступен только через alb, ssh только через bastion
+
+### 6.4 nginx + тестовая страница (ansible на bastion)
+
+nginx и тестовая страница накатаны на обе web vm через:
+
+- `ansible/playbooks/web.yml`
+
+проверка, что bastion видит внутренние vm:
+
+```bash
+ansible all -m ping
+```
