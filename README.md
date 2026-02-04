@@ -34,8 +34,8 @@ terraform - инфраструктура, ansible - настройка софт�
 - [X] nat gateway + route table для private подсетей
 - [X] security groups
 - [X] bastion vm
-- [ ] web vm x2 + alb
-- [ ] zabbix + agents
+- [X] web vm x2 + alb
+- [X] zabbix + agents
 - [ ] elastic + kibana + filebeat
 - [ ] snapshots schedule
 
@@ -83,7 +83,6 @@ sg разнесены по ролям: bastion, web, zabbix, elastic, kibana, al
 vm `bastion` в public подсети с публичным ip, вход только ssh
 
 ![bastion vm](img/11-bastion-vm.png)
-
 
 ## 6 web vm x2 + alb
 
@@ -137,3 +136,21 @@ nginx и тестовая страница накатаны на обе web vm �
 ```bash
 ansible all -m ping
 ```
+
+## 7 monitoring: zabbix + agents
+
+под мониторинг поднята отдельная vm `zabbix` в public подсети, zabbix server + web ui развернуты через docker compose (postgres + zabbix-server + zabbix-web)
+
+web ui доступен снаружи по публичному ip zabbix vm, логин по умолчанию `Admin / zabbix`
+
+![zabbix vm](img/15-zabbix-vm.png)
+![zabbix ui](img/16-zabbix-ui-login.png)
+
+на `web-a` и `web-b` установлен `zabbix-agent`, сервер опрашивает агентов по `10050/tcp` (в sg web вход на 10050 разрешён только от sg zabbix)
+
+плейбук: `ansible/playbooks/zabbix-agent.yml`
+
+в интерфейсе zabbix добавлены хосты `web-a` и `web-b` с подключением по dns `*.ru-central1.internal:10050`, после чего начинают поступать метрики и доступны latest data / graphs
+
+![zabbix hosts](img/17-zabbix-hosts.png)
+![zabbix latest](img/18-zabbix-latest.png)
