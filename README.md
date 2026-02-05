@@ -15,7 +15,6 @@ terraform - инфраструктура, ansible - настройка софт�
 - 7 monitoring: zabbix + agents
 - 8 logs: elasticsearch + kibana + filebeat
 - 9 резервное копирование: snapshots schedule
-- 10 проверка перед сдачей
 
 ## 1 сеть и подсети
 
@@ -220,35 +219,3 @@ Kibana - Discover - выбран `filebeat-*`, видны события/лог�
 - карточка расписания (daily + retention 7 days)
 
   ![elastic vm](img/24-snapshots-schedule-details.png)
-- список snapshot, видно что реально создаются
-
-  - `img/25-snapshots-list.png`
-
-    ![elastic vm](img/25-snapshots-list.png)
-
----
-
-## 10 проверка перед сдачей
-
-### 10.1 доступность сайта
-
-сайт должен открываться только через alb:
-
-```bash
-curl -I http://158.160.224.121
-```
-
-### 10.2 доступность мониторинга
-
-zabbix ui открывается по публичному ip zabbix vm
-в zabbix видны хосты web-a и web-b и приходят метрики (latest data)
-
-### 10.3 доступность логов
-
-в elastic есть индекс `filebeat-*`, в kibana discover видны события
-
-быстрый чек:
-
-```bash
-ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS "http://127.0.0.1:9200/_cat/indices?v" | egrep "filebeat|kibana|geoip" || true'
-```
