@@ -225,11 +225,7 @@ ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS -X PUT 
 
 где сделать скрины:
 
-- список расписаний snapshot
-
-  - `img/23-snapshots-schedule-list.png`
-
-  ![elastic vm](img/19-elastic-vm.png)
+- список расписаний snapshot![elastic vm](img/23-snapshots-schedule-list.png)
 - карточка расписания (daily + retention 7 days)
 
   ![elastic vm](img/24-snapshots-schedule-details.png)
