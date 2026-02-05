@@ -23,19 +23,12 @@ public (ru-central1-a)
 private-a (ru-central1-a)
 private-b (ru-central1-b)
 
-где смотреть: vpc - сети - sys-diplom
-
 ![vpc subnets](img/01-vpc-subnets.png)
 
 ## 2 nat и маршрутизация private
 
 для private подсетей включен исходящий доступ в интернет через nat gateway
 создана route table с маршрутом `0.0.0.0/0` через nat и привязана к private-a и private-b
-
-где смотреть:
-vpc - шлюзы - sys-diplom-nat
-vpc - таблицы маршрутизации - sys-diplom-private-rt
-vpc - подсети - sys-diplom-private-a / sys-diplom-private-b (поле таблица маршрутизации)
 
 ![nat gateway](img/02-nat-gateway.png)
 ![route table](img/03-route-table.png)
@@ -87,8 +80,6 @@ web vm:
 
 у web vm нет публичных ip, подключение по ssh только через bastion
 
-где смотреть: compute cloud - виртуальные машины
-
 ![web vms](img/12-web-vms.png)
 
 внутренние fqdn (используются в ansible inventory, без привязки к ip)
@@ -101,8 +92,6 @@ web vm:
 alb принимает http снаружи и балансирует трафик между `web-a` и `web-b`
 
 - public ip alb: `158.160.224.121`
-
-где смотреть: application load balancer - балансировщики
 
 ![alb](img/13-alb.png)
 
