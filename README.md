@@ -74,6 +74,10 @@ vm `bastion` в public подсети с публичным ip, вход тол�
 
 внутри приватного контура подняты два одинаковых web-сервера в разных зонах, наружу сайт отдаётся только через application load balancer
 
+```
+- сайт (через ALB): http://158.160.224.121
+```
+
 ### 6.1 web vm (private)
 
 web vm:
@@ -127,7 +131,13 @@ ansible all -m ping
 
 под мониторинг поднята отдельная vm `zabbix` в public подсети, zabbix server + web ui развернуты через docker compose (postgres + zabbix-server + zabbix-web)
 
-web ui доступен снаружи по публичному ip zabbix vm, логин по умолчанию `Admin / zabbix`
+web ui доступен снаружи по публичному ip zabbix vm.
+
+```
+- Zabbix UI: http://93.77.179.35/
+- логин: Admin / zabbix
+
+```
 
 ![zabbix vm](img/15-zabbix-vm.png)
 ![zabbix ui](img/16-zabbix-ui-login.png)
@@ -146,6 +156,11 @@ web ui доступен снаружи по публичному ip zabbix vm, �
 ## 8 logs: elasticsearch + kibana + filebeat
 
 логи nginx с web vm собираются filebeat и отправляются в elasticsearch, визуализация через kibana
+
+```
+- Kibana: http://93.77.183.41:5601/app/home#/
+
+```
 
 ### 8.1 elasticsearch (private)
 
