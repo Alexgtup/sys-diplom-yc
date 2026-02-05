@@ -217,7 +217,10 @@ Kibana - Discover - выбран `filebeat-*`, видны события/лог�
 
 настроено ежедневное создание snapshot дисков всех vm, хранение 7 дней
 
-- список расписаний snapshot![elastic vm](img/23-snapshots-schedule-list.png)
-- карточка расписания (daily + retention 7 days)
 
-  ![elastic vm](img/24-snapshots-schedule-details.png)
+список расписаний snapshot![elastic vm](img/23-snapshots-schedule-list.png)
+
+
+карточка расписания (daily + retention 7 days)
+
+![elastic vm](img/24-snapshots-schedule-details.png)
