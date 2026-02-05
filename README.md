@@ -175,8 +175,6 @@ curl -sS "http://127.0.0.1:9200/_cat/health?v"
 curl -sS "http://127.0.0.1:9200/_cat/indices?v" | egrep "filebeat|kibana|geoip" || true
 ```
 
-где сделать скрин:
-
 - compute cloud - vm `elastic1` (overview)
 
 ![elastic vm](img/19-elastic-vm.png)
