@@ -172,9 +172,6 @@ curl -sS "http://127.0.0.1:9200/_cat/indices?v" | egrep "filebeat|kibana|geoip" 
 vm `kibana1` находится в public подсети и доступна извне по `5601/tcp`
 kibana подключена к elasticsearch по внутреннему адресу
 
-где сделать скрин:
-
-- браузер: `http://<public_ip_kibana>:5601/app/home#/` (welcome screen / home)
 
 ![kibana home](img/20-kibana-home.png)
 
@@ -208,11 +205,11 @@ ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS "http:/
 ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS -X PUT "http://127.0.0.1:9200/filebeat-*/_settings" -H "Content-Type: application/json" -d "{\"index\":{\"number_of_replicas\":0}}"'
 ```
 
-где сделать скрины (обязательно для зачёта):
 
-- Kibana - Stack Management - Index Patterns - создание `filebeat-*`![kibana home](img/21-kibana-index-pattern.png)
+Kibana - Stack Management - Index Patterns - создание `filebeat-*`![kibana home](img/21-kibana-index-pattern.png)
 
-  - Kibana - Discover - выбран `filebeat-*`, видны события/логи
+- Kibana - Discover - выбран `filebeat-*`, видны события/логи
+
 - - ![kibana home](img/22-kibana-discover.png)
 
 ## 9 резервное копирование: snapshots schedule
@@ -222,9 +219,6 @@ ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS -X PUT 
 где смотреть:
 
 - compute cloud - snapshots / snapshot schedules
-
-где сделать скрины:
-
 - список расписаний snapshot![elastic vm](img/23-snapshots-schedule-list.png)
 - карточка расписания (daily + retention 7 days)
 
