@@ -6,40 +6,16 @@ terraform - инфраструктура, ansible - настройка софт�
 
 ## содержание
 
-- 0 требования и договорённости
 - 1 сеть и подсети
 - 2 nat и маршрутизация private
 - 3 terraform outputs
-
-## 0 требования и договорённости
-
-важное
-
-- ключи и токены yandex cloud в git не выкладываю
-- в ansible inventory не использую ip, только fqdn вида *.ru-central1.internal
-- web vm без публичных ip, ssh только через bastion
-- сайт доступен только через application load balancer
-- monitoring: zabbix + agents, дашборды по принципу use + пороги
-- logs: elasticsearch + kibana + filebeat (nginx access.log и error.log)
-- backups: snapshots ежедневно, хранение 7 дней
-
-практика для диплома
-
-- vm планируются минимальные (2 vcpu, 2-4 gb ram, 10 gb disk), можно прерываемые
-- перед отправкой на проверку прерываемые vm переводятся в обычные, чтобы не отвалились через 24 часа
-
-## 0.1 текущий прогресс
-
-- [X] сеть vpc + подсети
-- [X] nat gateway + route table для private подсетей
-- [X] security groups
-- [X] bastion vm
-- [X] web vm x2 + alb
-- [X] zabbix + agents
-- [ ] elastic + kibana + filebeat
-- [ ] snapshots schedule
-
----
+- 4 security groups
+- 5 bastion
+- 6 web vm x2 + alb
+- 7 monitoring: zabbix + agents
+- 8 logs: elasticsearch + kibana + filebeat
+- 9 резервное копирование: snapshots schedule
+- 10 проверка перед сдачей
 
 ## 1 сеть и подсети
 
@@ -52,7 +28,7 @@ private-b (ru-central1-b)
 
 ![vpc subnets](img/01-vpc-subnets.png)
 
-2 nat и маршрутизация private
+## 2 nat и маршрутизация private
 
 для private подсетей включен исходящий доступ в интернет через nat gateway
 создана route table с маршрутом `0.0.0.0/0` через nat и привязана к private-a и private-b
@@ -66,6 +42,17 @@ vpc - подсети - sys-diplom-private-a / sys-diplom-private-b (поле т�
 ![route table](img/03-route-table.png)
 ![private a rt](img/04-private-a-rt.png)
 ![private b rt](img/05-private-b-rt.png)
+
+## 3 terraform outputs
+
+terraform outputs используются для удобной проверки и быстрого доступа к данным инфраструктуры (например, внешние ip публичных vm, ip alb и т.п.)
+
+пример:
+
+```bash
+cd terraform
+terraform output
+```
 
 ## 4 security groups
 
@@ -154,3 +141,127 @@ web ui доступен снаружи по публичному ip zabbix vm, �
 
 ![zabbix hosts](img/17-zabbix-hosts.png)
 ![zabbix latest](img/18-zabbix-latest.png)
+
+---
+
+## 8 logs: elasticsearch + kibana + filebeat
+
+логи nginx с web vm собираются filebeat и отправляются в elasticsearch, визуализация через kibana
+
+### 8.1 elasticsearch (private)
+
+vm `elastic1` находится в приватной подсети, без публичного ip
+доступ по `22/tcp` только с bastion, `9200/tcp` только от web/kibana (через security groups)
+
+проверка на elastic:
+
+```bash
+curl -sS http://127.0.0.1:9200
+curl -sS "http://127.0.0.1:9200/_cat/health?v"
+curl -sS "http://127.0.0.1:9200/_cat/indices?v" | egrep "filebeat|kibana|geoip" || true
+```
+
+где сделать скрин:
+
+- compute cloud - vm `elastic1` (overview)
+
+![elastic vm](img/19-elastic-vm.png)
+
+### 8.2 kibana (public)
+
+vm `kibana1` находится в public подсети и доступна извне по `5601/tcp`
+kibana подключена к elasticsearch по внутреннему адресу
+
+где сделать скрин:
+
+- браузер: `http://<public_ip_kibana>:5601/app/home#/` (welcome screen / home)
+
+![kibana home](img/20-kibana-home.png)
+
+### 8.3 filebeat на web vm
+
+из-за проблем с apt-репозиторием elastic (403) filebeat развёрнут контейнером docker на `web-a` и `web-b`filebeat читает логи:
+
+- `/var/log/nginx/access.log`
+- `/var/log/nginx/error.log`
+- `/var/log/syslog`
+- `/var/log/auth.log`
+
+и отправляет в elasticsearch `elastic1:9200`
+
+проверка, что filebeat работает (на bastion):
+
+```bash
+ansible -i ansible/inventory/hosts.ini web -b -m shell -a "docker ps --filter name=filebeat"
+ansible -i ansible/inventory/hosts.ini web -b -m shell -a "docker logs --tail=20 filebeat | tail -n 20"
+```
+
+проверка индексов (на bastion):
+
+```bash
+ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS "http://127.0.0.1:9200/_cat/indices?v" | egrep "filebeat|kibana|geoip" || true'
+```
+
+если кластер 1-нода, чтобы индекс filebeat стал green, отключаем реплики:
+
+```bash
+ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS -X PUT "http://127.0.0.1:9200/filebeat-*/_settings" -H "Content-Type: application/json" -d "{\"index\":{\"number_of_replicas\":0}}"'
+```
+
+где сделать скрины (обязательно для зачёта):
+
+- Kibana - Stack Management - Index Patterns - создание `filebeat-*`![kibana home](img/21-kibana-index-pattern.png)
+
+  - Kibana - Discover - выбран `filebeat-*`, видны события/логи
+- - ![kibana home](img/22-kibana-discover.png)
+
+## 9 резервное копирование: snapshots schedule
+
+настроено ежедневное создание snapshot дисков всех vm, хранение 7 дней
+
+где смотреть:
+
+- compute cloud - snapshots / snapshot schedules
+
+где сделать скрины:
+
+- список расписаний snapshot
+
+  - `img/23-snapshots-schedule-list.png`
+
+  ![elastic vm](img/19-elastic-vm.png)
+- карточка расписания (daily + retention 7 days)
+
+  ![elastic vm](img/24-snapshots-schedule-details.png)
+- список snapshot, видно что реально создаются
+
+  - `img/25-snapshots-list.png`
+
+    ![elastic vm](img/25-snapshots-list.png)
+
+---
+
+## 10 проверка перед сдачей
+
+### 10.1 доступность сайта
+
+сайт должен открываться только через alb:
+
+```bash
+curl -I http://158.160.224.121
+```
+
+### 10.2 доступность мониторинга
+
+zabbix ui открывается по публичному ip zabbix vm
+в zabbix видны хосты web-a и web-b и приходят метрики (latest data)
+
+### 10.3 доступность логов
+
+в elastic есть индекс `filebeat-*`, в kibana discover видны события
+
+быстрый чек:
+
+```bash
+ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS "http://127.0.0.1:9200/_cat/indices?v" | egrep "filebeat|kibana|geoip" || true'
+```
