@@ -206,19 +206,16 @@ ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS -X PUT 
 ```
 
 
-Kibana - Stack Management - Index Patterns - создание `filebeat-*`![kibana home](img/21-kibana-index-pattern.png)
+Kibana - Stack Management - Index Patterns![kibana home](img/21-kibana-index-pattern.png)
 
-- Kibana - Discover - выбран `filebeat-*`, видны события/логи
+Kibana - Discover - выбран `filebeat-*`, видны события/логи
 
-- - ![kibana home](img/22-kibana-discover.png)
+![kibana home](img/22-kibana-discover.png)
 
 ## 9 резервное копирование: snapshots schedule
 
 настроено ежедневное создание snapshot дисков всех vm, хранение 7 дней
 
-где смотреть:
-
-- compute cloud - snapshots / snapshot schedules
 - список расписаний snapshot![elastic vm](img/23-snapshots-schedule-list.png)
 - карточка расписания (daily + retention 7 days)
 
