@@ -123,7 +123,7 @@ ansible all -m ping
 web ui доступен снаружи по публичному ip zabbix vm.
 
 ```
-- Zabbix UI: http://93.77.179.35/
+- Zabbix UI: http://93.77.178.139/
 - логин: Admin / zabbix
 
 ```
@@ -147,7 +147,7 @@ web ui доступен снаружи по публичному ip zabbix vm.
 логи nginx с web vm собираются filebeat и отправляются в elasticsearch, визуализация через kibana
 
 ```
-- Kibana: http://93.77.183.41:5601/app/home#/
+- Kibana: http://89.169.142.16:5601/app/home#/
 
 ```
 
@@ -172,7 +172,6 @@ curl -sS "http://127.0.0.1:9200/_cat/indices?v" | egrep "filebeat|kibana|geoip" 
 
 vm `kibana1` находится в public подсети и доступна извне по `5601/tcp`
 kibana подключена к elasticsearch по внутреннему адресу
-
 
 ![kibana home](img/20-kibana-home.png)
 
@@ -206,7 +205,6 @@ ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS "http:/
 ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS -X PUT "http://127.0.0.1:9200/filebeat-*/_settings" -H "Content-Type: application/json" -d "{\"index\":{\"number_of_replicas\":0}}"'
 ```
 
-
 Kibana - Stack Management - Index Patterns![kibana home](img/21-kibana-index-pattern.png)
 
 Kibana - Discover - выбран `filebeat-*`, видны события/логи
@@ -217,9 +215,7 @@ Kibana - Discover - выбран `filebeat-*`, видны события/лог�
 
 настроено ежедневное создание snapshot дисков всех vm, хранение 7 дней
 
-
 список расписаний snapshot![elastic vm](img/23-snapshots-schedule-list.png)
-
 
 карточка расписания (daily + retention 7 days)
 
