@@ -1,0 +1,56 @@
+- name: kibana (docker compose)
+  hosts: kibana
+  become: true
+
+  vars:
+    compose_v: "2.24.6"
+    kibana_version: "7.17.28"
+    elastic_url: "http://10.10.2.14:9200"
+
+  tasks:
+    - name: apt update
+      apt:
+        update_cache: true
+
+    - name: install docker + curl + unzip
+      apt:
+        name: [docker.io, curl, unzip]
+        state: present
+
+    - name: enable docker
+      systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: install docker compose v2
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/v{{ compose_v }}/docker-compose-linux-x86_64"
+        dest: /usr/local/bin/docker-compose
+        mode: "0755"
+
+    - name: create dir
+      file:
+        path: /opt/kibana
+        state: directory
+        mode: "0755"
+
+    - name: put docker-compose.yml
+      copy:
+        dest: /opt/kibana/docker-compose.yml
+        mode: "0644"
+        content: |
+          services:
+            kibana:
+              image: docker.elastic.co/kibana/kibana:{{ kibana_version }}
+              restart: unless-stopped
+              environment:
+                - ELASTICSEARCH_HOSTS={{ elastic_url }}
+                - SERVER_HOST=0.0.0.0
+              ports:
+                - "5601:5601"
+
+    - name: docker compose up
+      command: /usr/local/bin/docker-compose up -d
+      args:
+        chdir: /opt/kibana

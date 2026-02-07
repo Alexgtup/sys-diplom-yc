@@ -1,0 +1,76 @@
+- name: elasticsearch (docker compose)
+  hosts: elastic
+  become: true
+
+  vars:
+    compose_v: "2.24.6"
+    es_version: "7.17.28"
+
+  tasks:
+    - name: apt update
+      apt:
+        update_cache: true
+
+    - name: install docker + curl + unzip
+      apt:
+        name:
+          - docker.io
+          - curl
+          - unzip
+        state: present
+
+    - name: enable docker
+      systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: install docker compose v2
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/v{{ compose_v }}/docker-compose-linux-x86_64"
+        dest: /usr/local/bin/docker-compose
+        mode: "0755"
+
+    - name: vm.max_map_count for elastic
+      sysctl:
+        name: vm.max_map_count
+        value: "262144"
+        state: present
+        reload: true
+
+    - name: create dir
+      file:
+        path: /opt/elastic
+        state: directory
+        mode: "0755"
+
+    - name: put docker-compose.yml
+      copy:
+        dest: /opt/elastic/docker-compose.yml
+        mode: "0644"
+        content: |
+          services:
+            elasticsearch:
+              image: docker.elastic.co/elasticsearch/elasticsearch:{{ es_version }}
+              restart: unless-stopped
+              environment:
+                - discovery.type=single-node
+                - xpack.security.enabled=false
+                - xpack.security.transport.ssl.enabled=false
+                - ES_JAVA_OPTS=-Xms512m -Xmx512m
+              ulimits:
+                memlock:
+                  soft: -1
+                  hard: -1
+              volumes:
+                - esdata:/usr/share/elasticsearch/data
+              ports:
+                - "9200:9200"
+          volumes:
+            esdata: {}
+
+    - name: docker compose up
+      shell: |
+        /usr/local/bin/docker-compose up -d
+      args:
+        chdir: /opt/elastic

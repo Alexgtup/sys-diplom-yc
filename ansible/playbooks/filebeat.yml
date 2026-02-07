@@ -1,0 +1,65 @@
+- name: filebeat (web -> elastic)
+  hosts: web
+  become: true
+
+  vars:
+    elastic_host: "10.10.2.14:9200"
+    kibana_host: "10.10.1.22:5601"
+
+  tasks:
+    - name: apt update + deps
+      apt:
+        update_cache: true
+        name: [curl, gnupg, apt-transport-https]
+        state: present
+
+    - name: elastic gpg key
+      get_url:
+        url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        dest: /usr/share/keyrings/elastic.gpg
+        mode: "0644"
+
+    - name: elastic 7.x repo
+      copy:
+        dest: /etc/apt/sources.list.d/elastic-7.x.list
+        mode: "0644"
+        content: |
+          deb [signed-by=/usr/share/keyrings/elastic.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main
+
+    - name: install filebeat
+      apt:
+        update_cache: true
+        name: filebeat
+        state: present
+
+    - name: filebeat.yml
+      copy:
+        dest: /etc/filebeat/filebeat.yml
+        mode: "0644"
+        content: |
+          filebeat.config.modules:
+            path: ${path.config}/modules.d/*.yml
+            reload.enabled: false
+
+          setup.kibana:
+            host: "{{ kibana_host }}"
+
+          output.elasticsearch:
+            hosts: ["{{ elastic_host }}"]
+
+          processors:
+            - add_host_metadata: {}
+            - add_cloud_metadata: {}
+            - add_docker_metadata: {}
+
+    - name: enable modules (system, nginx)
+      command: filebeat modules enable system nginx
+      register: mod_enable
+      changed_when: "'Enabled' in mod_enable.stdout or 'Enabled' in mod_enable.stderr"
+      failed_when: false
+
+    - name: enable + restart filebeat
+      systemd:
+        name: filebeat
+        enabled: true
+        state: restarted

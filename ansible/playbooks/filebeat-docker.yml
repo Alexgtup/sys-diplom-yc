@@ -1,0 +1,85 @@
+- name: filebeat (docker, web -> elastic)
+  hosts: web
+  become: true
+
+  vars:
+    filebeat_version: "7.17.28"
+    filebeat_image: "docker.elastic.co/beats/filebeat:{{ filebeat_version }}"
+    elastic_host: "10.10.2.14:9200"
+    kibana_host:  "10.10.1.22:5601"
+
+  tasks:
+    - name: remove broken elastic apt repo (leftovers)
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/apt/sources.list.d/elastic-7.x.list
+        - /usr/share/keyrings/elastic.gpg
+
+    - name: apt update
+      apt:
+        update_cache: true
+
+    - name: install docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: enable docker
+      systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: create dirs
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - /opt/filebeat
+        - /opt/filebeat/data
+
+    - name: put filebeat.yml
+      copy:
+        dest: /opt/filebeat/filebeat.yml
+        mode: "0644"
+        content: |
+          filebeat.inputs:
+            - type: log
+              enabled: true
+              paths:
+                - /var/log/syslog
+                - /var/log/auth.log
+            - type: log
+              enabled: true
+              paths:
+                - /var/log/nginx/access.log
+                - /var/log/nginx/error.log
+
+          setup.kibana:
+            host: "{{ kibana_host }}"
+
+          output.elasticsearch:
+            hosts: ["{{ elastic_host }}"]
+
+          processors:
+            - add_host_metadata: {}
+            - add_cloud_metadata: {}
+
+    - name: pull image
+      command: "docker pull {{ filebeat_image }}"
+
+    - name: stop old container if exists
+      shell: "docker rm -f filebeat || true"
+
+    - name: run filebeat
+      shell: |
+        docker run -d --name filebeat --restart unless-stopped \
+          --user=root \
+          -v /opt/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro \
+          -v /opt/filebeat/data:/usr/share/filebeat/data \
+          -v /var/log:/var/log:ro \
+          {{ filebeat_image }} \
+          filebeat -e --strict.perms=false

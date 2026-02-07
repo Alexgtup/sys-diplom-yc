@@ -1,0 +1,29 @@
+- name: zabbix agent on web
+  hosts: web
+  become: true
+
+  tasks:
+    - name: apt update
+      apt:
+        update_cache: true
+
+    - name: install zabbix agent
+      apt:
+        name: zabbix-agent
+        state: present
+
+    - name: configure agent (server + active)
+      lineinfile:
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: "{{ item.re }}"
+        line: "{{ item.line }}"
+      loop:
+        - { re: '^Server=',       line: 'Server=zabbix.ru-central1.internal' }
+        - { re: '^ServerActive=', line: 'ServerActive=zabbix.ru-central1.internal' }
+        - { re: '^HostnameItem=', line: 'HostnameItem=system.hostname' }
+
+    - name: restart agent
+      systemd:
+        name: zabbix-agent
+        enabled: true
+        state: restarted
