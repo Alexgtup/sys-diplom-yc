@@ -24,7 +24,7 @@ resource "yandex_compute_instance" "elastic" {
   }
 
   metadata = {
-    ssh-keys = "ubuntu:${file("~/.ssh/id_ed25519.pub")}"
+    ssh-keys = "ubuntu:${file("${path.module}/keys/ssh_key.pub")}"
   }
 
   scheduling_policy {
