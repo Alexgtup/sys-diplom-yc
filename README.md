@@ -123,7 +123,7 @@ ansible all -m ping
 web ui доступен снаружи по публичному ip zabbix vm.
 
 ```
-- Zabbix UI: http://93.77.178.139/
+- Zabbix UI: http://93.77.177.142/
 - логин: Admin / zabbix
 
 ```
@@ -147,7 +147,7 @@ web ui доступен снаружи по публичному ip zabbix vm.
 логи nginx с web vm собираются filebeat и отправляются в elasticsearch, визуализация через kibana
 
 ```
-- Kibana: http://89.169.142.16:5601/app/home#/
+- Kibana: http://93.77.179.6:5601/app/home#/
 
 ```
 
