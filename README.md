@@ -37,7 +37,7 @@ private-b (ru-central1-b)
 
 ## 3 terraform outputs
 
-terraform outputs используются для удобной проверки и быстрого доступа к данным инфраструктуры (например, внешние ip публичных vm, ip alb и т.п.)
+terraform outputs используются для удобной проверки и быстрого доступа к данным инфраструктуры (например, внешних ip публичных vm, ip alb и т.п.)
 
 пример:
 
@@ -177,7 +177,9 @@ kibana подключена к elasticsearch по внутреннему адр�
 
 ### 8.3 filebeat на web vm
 
-из-за проблем с apt-репозиторием elastic (403) filebeat развёрнут контейнером docker на `web-a` и `web-b`filebeat читает логи:
+из-за проблем с apt-репозиторием elastic (403) filebeat развёрнут контейнером docker на `web-a` и `web-b`
+
+filebeat читает логи:
 
 - `/var/log/nginx/access.log`
 - `/var/log/nginx/error.log`
@@ -205,7 +207,9 @@ ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS "http:/
 ansible -i ansible/inventory/hosts.ini elastic1 -b -m shell -a 'curl -sS -X PUT "http://127.0.0.1:9200/filebeat-*/_settings" -H "Content-Type: application/json" -d "{\"index\":{\"number_of_replicas\":0}}"'
 ```
 
-Kibana - Stack Management - Index Patterns![kibana home](img/21-kibana-index-pattern.png)
+Kibana - Stack Management - Index Patterns
+
+![kibana home](img/21-kibana-index-pattern.png)
 
 Kibana - Discover - выбран `filebeat-*`, видны события/логи
 
@@ -215,8 +219,17 @@ Kibana - Discover - выбран `filebeat-*`, видны события/лог�
 
 настроено ежедневное создание snapshot дисков всех vm, хранение 7 дней
 
-список расписаний snapshot![elastic vm](img/23-snapshots-schedule-list.png)
+список расписаний snapshot
+
+![elastic vm](img/23-snapshots-schedule-list.png)
 
 карточка расписания (daily + retention 7 days)
 
 ![elastic vm](img/24-snapshots-schedule-details.png)
+
+## связанные направления
+
+Этот репозиторий показывает инфраструктурную часть разработки: сеть, балансировку, автоматизацию конфигурации, мониторинг, логи и резервное копирование. Для задач, где поверх такой инфраструктуры нужен API, серверная логика, база данных или интеграции:
+
+- Backend-разработка: https://alexgtup.github.io/backend-development/?utm_source=github&utm_medium=repository&utm_campaign=sys_diplom_yc
+- Портфолио и другие проекты: https://alexgtup.github.io/?utm_source=github&utm_medium=repository&utm_campaign=sys_diplom_yc
