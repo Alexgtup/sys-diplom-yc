@@ -2,44 +2,56 @@
   hosts: zabbix
   become: true
 
+  vars:
+    zabbix_db_password: "{{ lookup('env', 'ZABBIX_DB_PASSWORD') | default('', true) }}"
+
+  pre_tasks:
+    - name: require ZABBIX_DB_PASSWORD
+      ansible.builtin.assert:
+        that:
+          - zabbix_db_password | length >= 16
+        fail_msg: >-
+          Set a strong ZABBIX_DB_PASSWORD in the environment before running
+          this playbook. Do not store the password in Git.
+
   tasks:
     - name: apt update
-      apt:
+      ansible.builtin.apt:
         update_cache: true
 
     - name: install docker + curl
-      apt:
+      ansible.builtin.apt:
         name:
           - docker.io
           - curl
         state: present
 
     - name: enable docker
-      systemd:
+      ansible.builtin.systemd:
         name: docker
         enabled: true
         state: started
 
     - name: install docker compose v2 binary
-      get_url:
+      ansible.builtin.get_url:
         url: https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-linux-x86_64
         dest: /usr/local/bin/docker-compose
         mode: "0755"
 
     - name: check docker compose
-      command: /usr/local/bin/docker-compose version
+      ansible.builtin.command: /usr/local/bin/docker-compose version
       changed_when: false
 
     - name: create dir
-      file:
+      ansible.builtin.file:
         path: /opt/zabbix
         state: directory
         mode: "0755"
 
     - name: put docker-compose.yml
-      copy:
+      ansible.builtin.copy:
         dest: /opt/zabbix/docker-compose.yml
-        mode: "0644"
+        mode: "0600"
         content: |
           services:
             postgres:
@@ -47,7 +59,7 @@
               restart: unless-stopped
               environment:
                 POSTGRES_USER: zabbix
-                POSTGRES_PASSWORD: zabbix
+                POSTGRES_PASSWORD: {{ zabbix_db_password | to_json }}
                 POSTGRES_DB: zabbix
               volumes:
                 - pgdata:/var/lib/postgresql/data
@@ -60,7 +72,7 @@
               environment:
                 DB_SERVER_HOST: postgres
                 POSTGRES_USER: zabbix
-                POSTGRES_PASSWORD: zabbix
+                POSTGRES_PASSWORD: {{ zabbix_db_password | to_json }}
                 POSTGRES_DB: zabbix
               ports:
                 - "10051:10051"
@@ -74,7 +86,7 @@
               environment:
                 DB_SERVER_HOST: postgres
                 POSTGRES_USER: zabbix
-                POSTGRES_PASSWORD: zabbix
+                POSTGRES_PASSWORD: {{ zabbix_db_password | to_json }}
                 POSTGRES_DB: zabbix
                 ZBX_SERVER_HOST: zabbix-server
                 PHP_TZ: UTC
@@ -85,17 +97,17 @@
             pgdata: {}
 
     - name: down (cleanup old state)
-      command: /usr/local/bin/docker-compose down
+      ansible.builtin.command: /usr/local/bin/docker-compose down
       args:
         chdir: /opt/zabbix
       failed_when: false
 
     - name: pull images
-      command: /usr/local/bin/docker-compose pull
+      ansible.builtin.command: /usr/local/bin/docker-compose pull
       args:
         chdir: /opt/zabbix
 
     - name: up
-      command: /usr/local/bin/docker-compose up -d
+      ansible.builtin.command: /usr/local/bin/docker-compose up -d
       args:
         chdir: /opt/zabbix
