@@ -59,7 +59,7 @@ variable "vm_user" {
   default = "ubuntu"
 }
 
-variable "ssh_public_key_path" {
+variable "ssh_public_key" {
   type        = string
-  description = "path to public ssh key, например ~/.ssh/id_rsa.pub"
+  description = "OpenSSH public key value used for VM metadata. Never pass a private key."
 }
