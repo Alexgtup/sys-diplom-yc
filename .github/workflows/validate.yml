@@ -1,0 +1,76 @@
+name: Validate infrastructure
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt
+        run: terraform -chdir=terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform -chdir=terraform init -backend=false -input=false
+
+      - name: Terraform validate
+        run: terraform -chdir=terraform validate
+
+      - name: Install Ansible
+        run: python -m pip install --disable-pip-version-check ansible-core
+
+      - name: Ansible syntax
+        env:
+          ZABBIX_DB_PASSWORD: ci-only-placeholder-password
+        run: |
+          cd ansible
+          for playbook in playbooks/*.yml; do
+            ansible-playbook --syntax-check -i inventory/hosts.ini "$playbook"
+          done
+
+      - name: Reject obvious committed secrets
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          patterns = {
+              "private key": re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
+              "GitHub token": re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}\b"),
+              "AWS access key": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+              "Telegram bot token": re.compile(r"\b\d{8,12}:[A-Za-z0-9_-]{30,}\b"),
+              "hardcoded demo DB password": re.compile(r"POSTGRES_PASSWORD\s*:\s*[\"']?zabbix[\"']?", re.I),
+          }
+
+          ignored = {".git", ".terraform", "__pycache__"}
+          hits = []
+          for path in pathlib.Path(".").rglob("*"):
+              if not path.is_file() or ignored.intersection(path.parts):
+                  continue
+              try:
+                  text = path.read_text(encoding="utf-8")
+              except (UnicodeDecodeError, OSError):
+                  continue
+              for label, pattern in patterns.items():
+                  if pattern.search(text):
+                      hits.append(f"{path}: {label}")
+
+          if hits:
+              print("Potential committed secrets detected:")
+              for hit in hits:
+                  print(f"- {hit}")
+              sys.exit(1)
+          print("No obvious committed secrets found.")
+          PY
