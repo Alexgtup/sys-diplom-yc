@@ -24,7 +24,7 @@ resource "yandex_compute_instance" "web_a" {
   }
 
   metadata = {
-    ssh-keys = "${var.vm_user}:${file("${path.module}/${var.ssh_public_key_path}")}"
+    ssh-keys = "${var.vm_user}:${var.ssh_public_key}"
   }
 
   scheduling_policy {
@@ -58,7 +58,7 @@ resource "yandex_compute_instance" "web_b" {
   }
 
   metadata = {
-    ssh-keys = "${var.vm_user}:${file("${path.module}/${var.ssh_public_key_path}")}"
+    ssh-keys = "${var.vm_user}:${var.ssh_public_key}"
   }
 
   scheduling_policy {
