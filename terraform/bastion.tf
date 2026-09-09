@@ -29,7 +29,7 @@ resource "yandex_compute_instance" "bastion" {
   }
 
   metadata = {
-    ssh-keys = "${var.vm_user}:${file(var.ssh_public_key_path)}"
+    ssh-keys = "${var.vm_user}:${var.ssh_public_key}"
   }
 
   scheduling_policy {
